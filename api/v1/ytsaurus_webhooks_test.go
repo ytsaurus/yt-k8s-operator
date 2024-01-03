@@ -307,13 +307,14 @@ var _ = Describe("Test for Ytsaurus webhooks", func() {
 			Expect(k8sClient.Create(ctx, ytsaurus)).Should(MatchError(ContainSubstring("spec.hostNetwork: Required")))
 		})
 
-		It("primaryMaster/hostAddresses length should be equal to instanceCount", func() {
+		It(" instanceCount shouldn't be set if primaryMaster/hostAddresses is set", func() {
 			ytsaurus := CreateBaseYtsaurusResource(namespace)
 			ytsaurus.Spec.HostNetwork = true
 			ytsaurus.Spec.PrimaryMasters.InstanceCount = 3
 			ytsaurus.Spec.PrimaryMasters.HostAddresses = []string{"test.yt.address"}
 
-			Expect(k8sClient.Create(ctx, ytsaurus)).Should(MatchError(ContainSubstring("spec.primaryMasters.hostAddresses: Invalid value")))
+			expectedErrStr := "spec.primaryMasters.instanceCount shouldn't be set if spec.primaryMasters.hostAddresses is present"
+			Expect(k8sClient.Create(ctx, ytsaurus)).Should(MatchError(ContainSubstring(expectedErrStr)))
 		})
 
 	})
