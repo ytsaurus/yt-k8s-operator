@@ -41,10 +41,27 @@ func (r *RemoteExecNodesReconciler) Sync(
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	err = component.Sync(ctx)
+	status, err := component.Sync(ctx)
 	if err != nil {
 		logger.Error(err, "failed to sync remote nodes")
 		return ctrl.Result{Requeue: true}, err
 	}
-	return ctrl.Result{}, nil
+
+	var requeue bool
+	if status.SyncStatus != components.SyncStatusReady {
+		resource.Status.ReleaseStatus = ytv1.RemoteExecNodeReleaseStatusPending
+		requeue = true
+	} else {
+		resource.Status.ReleaseStatus = ytv1.RemoteExecNodeReleaseStatusRunning
+		requeue = false
+	}
+
+	logger.Info("Setting status for remote exec nodes", "status", resource.Status.ReleaseStatus)
+	err = r.Client.Status().Update(ctx, resource)
+	if err != nil {
+		logger.Error(err, "failed to update status for remote exec nodes")
+		return ctrl.Result{Requeue: true}, err
+	}
+
+	return ctrl.Result{Requeue: requeue}, nil
 }

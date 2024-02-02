@@ -20,14 +20,23 @@ import (
 	"context"
 	"time"
 
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	ytv1 "github.com/ytsaurus/yt-k8s-operator/api/v1"
+)
+
+const (
+	remoteClusterSpecField = "remoteClusterSpec"
 )
 
 // RemoteExecNodesReconciler reconciles a RemoteExecNodes object
@@ -77,7 +86,47 @@ func (r *RemoteExecNodesReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RemoteExecNodesReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// See https://book.kubebuilder.io/reference/watching-resources/externally-managed for the reference implementation
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &ytv1.RemoteExecNodes{}, remoteClusterSpecField, func(rawObj client.Object) []string {
+		remoteExecNodes := rawObj.(*ytv1.RemoteExecNodes)
+		if remoteExecNodes.Spec.RemoteClusterSpec == nil {
+			return nil
+		}
+		return []string{remoteExecNodes.Spec.RemoteClusterSpec.Name}
+	}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&ytv1.RemoteExecNodes{}).
+		Watches(
+			&source.Kind{Type: &ytv1.RemoteYtsaurus{}},
+			handler.EnqueueRequestsFromMapFunc(r.findRemoteNodesForRemoteYtsaurus),
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
+		).
 		Complete(r)
+}
+
+func (r *RemoteExecNodesReconciler) findRemoteNodesForRemoteYtsaurus(remoteYtsaurus client.Object) []reconcile.Request {
+	// See https://book.kubebuilder.io/reference/watching-resources/externally-managed for the reference implementation
+	attachedRemoteExecNodes := &ytv1.RemoteExecNodesList{}
+	listOps := &client.ListOptions{
+		FieldSelector: fields.OneTermEqualSelector(remoteClusterSpecField, remoteYtsaurus.GetName()),
+		Namespace:     remoteYtsaurus.GetNamespace(),
+	}
+	err := r.List(context.TODO(), attachedRemoteExecNodes, listOps)
+	if err != nil {
+		return []reconcile.Request{}
+	}
+
+	requests := make([]reconcile.Request, len(attachedRemoteExecNodes.Items))
+	for i, item := range attachedRemoteExecNodes.Items {
+		requests[i] = reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      item.GetName(),
+				Namespace: item.GetNamespace(),
+			},
+		}
+	}
+	return requests
 }

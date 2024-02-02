@@ -23,7 +23,7 @@ func (n *baseExecNode) Fetch(ctx context.Context) error {
 	return resources.Fetch(ctx, n.server)
 }
 
-func (n *baseExecNode) doSyncInternal(ctx context.Context, dry bool) (ComponentStatus, error) {
+func (n *baseExecNode) doSyncBase(ctx context.Context, dry bool) (ComponentStatus, error) {
 	var err error
 	if !dry {
 		setContainerPrivileged := func(ct *corev1.Container) {

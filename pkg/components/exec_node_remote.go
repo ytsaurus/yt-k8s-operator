@@ -56,8 +56,8 @@ func NewRemoteExecNodes(
 func (n *RemoteExecNode) doSync(ctx context.Context, dry bool) (ComponentStatus, error) {
 	var err error
 
-	if n.server.needSync() {
-		return n.doSyncInternal(ctx, dry)
+	if n.server.needSync() || n.server.needUpdate() {
+		return n.doSyncBase(ctx, dry)
 	}
 
 	if !n.server.arePodsReady(ctx) {
@@ -67,7 +67,6 @@ func (n *RemoteExecNode) doSync(ctx context.Context, dry bool) (ComponentStatus,
 	return SimpleStatus(SyncStatusReady), err
 }
 
-func (n *RemoteExecNode) Sync(ctx context.Context) error {
-	_, err := n.doSync(ctx, false)
-	return err
+func (n *RemoteExecNode) Sync(ctx context.Context) (ComponentStatus, error) {
+	return n.doSync(ctx, false)
 }

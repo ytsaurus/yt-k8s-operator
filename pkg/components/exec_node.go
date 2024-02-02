@@ -78,7 +78,7 @@ func (n *ExecNode) doSync(ctx context.Context, dry bool) (ComponentStatus, error
 	}
 
 	if LocalServerNeedSync(n.server, n.ytsaurus) {
-		return n.doSyncInternal(ctx, dry)
+		return n.doSyncBase(ctx, dry)
 	}
 
 	if !n.server.arePodsReady(ctx) {
