@@ -40,7 +40,7 @@ func NewYtsaurusClient(
 	cfgen *ytconfig.Generator,
 	ytsaurus *apiproxy.Ytsaurus,
 	httpProxy Component,
-) YtsaurusClient {
+) YtsaurusClient2 {
 	resource := ytsaurus.GetResource()
 	l := labeller.Labeller{
 		ObjectMeta:     &resource.ObjectMeta,

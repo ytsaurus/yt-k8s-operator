@@ -3,14 +3,24 @@ package components
 import (
 	"context"
 	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type SyncStatus string
 
+/*
+I suggest in future we have statuses:
+ 1. Ready = all good
+ 2. NeedUpdate = sync me
+ 3. NeedFullUpdate = sync me (but I will recreate pods, just saying)
+ 4. Updating = nothing to do, come later
+ 5. Blocked = human please fix you configs or bugs in code
+*/
 const (
 	SyncStatusBlocked         SyncStatus = "Blocked"
 	SyncStatusNeedFullUpdate  SyncStatus = "NeedFullUpdate"

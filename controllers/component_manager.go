@@ -2,18 +2,58 @@ package controllers
 
 import (
 	"context"
+	"time"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	apiProxy "github.com/ytsaurus/yt-k8s-operator/pkg/apiproxy"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/components"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/labeller"
 	"github.com/ytsaurus/yt-k8s-operator/pkg/ytconfig"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
 )
+
+type componentsStore struct {
+	discovery   components.Component2
+	master      components.Component2
+	httpProxies []components.Component2
+	ytClient    components.YtsaurusClient2
+	dataNodes   []components.Component2
+	// (optional) ui (depends on master)
+	// (optional) rpcproxies (depends on master)
+	// (optional) tcpproxies (depends on master)
+	// (optional) execnodes (depends on master)
+	// (optional) tabletnodes (depends on master, yt client)
+	// (optional) scheduler (depends on master, exec nodes, tablet nodes)
+	// (optional) controller agents (depends on master)
+	// (optional) querytrackers (depends on yt client and tablet nodes)
+	// (optional) queueagents (depend on y cli, master, tablet nodes)
+	// (optional) yqlagents (depend on master)
+	// (optional) strawberry (depend on master, scheduler, data nodes)
+}
+
+func (c *componentsStore) all() []components.Component {
+	var result []components.Component
+	for _, item := range c.all2() {
+		result = append(result, item)
+	}
+	return result
+}
+
+func (c *componentsStore) all2() []components.Component2 {
+	result := []components.Component2{
+		c.discovery,
+		c.master,
+	}
+	result = append(result, c.httpProxies...)
+	result = append(result, c.ytClient)
+	result = append(result, c.dataNodes...)
+	return result
+}
 
 type ComponentManager struct {
 	ytsaurus              *apiProxy.Ytsaurus
-	allComponents         []components.Component
+	allComponents         componentsStore
 	queryTrackerComponent components.Component
 	schedulerComponent    components.Component
 	status                ComponentManagerStatus
@@ -27,29 +67,37 @@ type ComponentManagerStatus struct {
 	allReadyOrUpdating bool
 }
 
-func NewComponentManager(
-	ctx context.Context,
-	ytsaurus *apiProxy.Ytsaurus,
-) (*ComponentManager, error) {
-	logger := log.FromContext(ctx)
+func NewComponentManager(ytsaurus *apiProxy.Ytsaurus) (*ComponentManager, error) {
 	resource := ytsaurus.GetResource()
 
 	cfgen := ytconfig.NewGenerator(resource, getClusterDomain(ytsaurus.APIProxy().Client()))
 
+	store := componentsStore{}
 	d := components.NewDiscovery(cfgen, ytsaurus)
+	store.discovery = d
 	m := components.NewMaster(cfgen, ytsaurus)
+	store.master = m
 	var hps []components.Component
+	var hps2 []components.Component2
 	for _, hpSpec := range ytsaurus.GetResource().Spec.HTTPProxies {
-		hps = append(hps, components.NewHTTPProxy(cfgen, ytsaurus, m, hpSpec))
+		hp := components.NewHTTPProxy(cfgen, ytsaurus, m, hpSpec)
+		hps = append(hps, hp)
+		hps2 = append(hps2, hp)
 	}
+	store.httpProxies = hps2
 	yc := components.NewYtsaurusClient(cfgen, ytsaurus, hps[0])
+	store.ytClient = yc
 
 	var dnds []components.Component
+	var dnds2 []components.Component2
 	if resource.Spec.DataNodes != nil && len(resource.Spec.DataNodes) > 0 {
 		for _, dndSpec := range ytsaurus.GetResource().Spec.DataNodes {
-			dnds = append(dnds, components.NewDataNode(cfgen, ytsaurus, m, dndSpec))
+			dns := components.NewDataNode(cfgen, ytsaurus, m, dndSpec)
+			dnds = append(dnds, dns)
+			dnds2 = append(dnds2, dns)
 		}
 	}
+	store.dataNodes = dnds2
 
 	var s components.Component
 
@@ -126,7 +174,24 @@ func NewComponentManager(
 		strawberry := components.NewStrawberryController(cfgen, ytsaurus, m, s, dnds)
 		allComponents = append(allComponents, strawberry)
 	}
+	return &ComponentManager{
+		ytsaurus: ytsaurus,
+		//allComponents: allComponents,
+		allComponents: componentsStore{
+			discovery:   d,
+			master:      m,
+			httpProxies: hps2,
+			ytClient:    yc,
+			dataNodes:   dnds2,
+		},
+		queryTrackerComponent: q,
+		schedulerComponent:    s,
+		//status:                status,
+	}, nil
+}
 
+func (cm *ComponentManager) CollectStatuses(ctx context.Context) error {
+	logger := log.FromContext(ctx)
 	// Fetch component status.
 	var readyComponents []string
 	var notReadyComponents []string
@@ -138,11 +203,11 @@ func NewComponentManager(
 		needLocalUpdate:    nil,
 		allReadyOrUpdating: true,
 	}
-	for _, c := range allComponents {
+	for _, c := range cm.allComponents.all() {
 		err := c.Fetch(ctx)
 		if err != nil {
 			logger.Error(err, "failed to fetch status for controller", "component", c.GetName())
-			return nil, err
+			return nil
 		}
 
 		componentStatus := c.Status(ctx)
@@ -177,26 +242,22 @@ func NewComponentManager(
 		}
 	}
 
+	resource := cm.ytsaurus.GetResource()
 	logger.Info("Ytsaurus sync status",
 		"notReadyComponents", notReadyComponents,
 		"readyComponents", readyComponents,
 		"updateState", resource.Status.UpdateStatus.State,
 		"clusterState", resource.Status.State)
 
-	return &ComponentManager{
-		ytsaurus:              ytsaurus,
-		allComponents:         allComponents,
-		queryTrackerComponent: q,
-		schedulerComponent:    s,
-		status:                status,
-	}, nil
+	cm.status = status
+	return nil
 }
 
 func (cm *ComponentManager) Sync(ctx context.Context) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
 	hasPending := false
-	for _, c := range cm.allComponents {
+	for _, c := range cm.allComponents.all() {
 		status := c.Status(ctx)
 
 		if status.SyncStatus == components.SyncStatusPending ||
@@ -252,7 +313,7 @@ func (cm *ComponentManager) needSchedulerUpdate() bool {
 }
 
 func (cm *ComponentManager) arePodsRemoved() bool {
-	for _, cmp := range cm.allComponents {
+	for _, cmp := range cm.allComponents.all() {
 		if components.IsUpdatingComponent(cm.ytsaurus, cmp) && !cm.areComponentPodsRemoved(cmp) {
 			return false
 		}
