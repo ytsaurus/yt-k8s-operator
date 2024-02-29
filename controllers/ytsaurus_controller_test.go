@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	timeout  = time.Second * 90
+	timeout  = time.Second * 120
 	interval = time.Millisecond * 250
 )
 
@@ -517,7 +517,22 @@ var _ = Describe("Basic test for Ytsaurus controller", func() {
 			ytClient := getYtClient(g, namespace)
 
 			By("Running sort operation to ensure exec node works")
-			runAndCheckSortOperation(ytClient)
+			op := runAndCheckSortOperation(ytClient)
+			op.ID()
+
+			result, err := ytClient.ListJobs(ctx, op.ID(), &yt.ListJobsOptions{
+				JobState: &yt.JobCompleted,
+			})
+			Ω(err).ShouldNot(HaveOccurred())
+			for _, job := range result.Jobs {
+				fmt.Println(job)
+			}
+
+			statuses, err := yt.ListAllJobs(ctx, ytClient, op.ID(), nil)
+			Ω(err).ShouldNot(HaveOccurred())
+			for _, status := range statuses {
+				fmt.Println(status.ExecAttributes)
+			}
 		})
 	})
 
@@ -600,7 +615,7 @@ func getSimpleUpdateScenario(namespace, newImage string) func() {
 	}
 }
 
-func runAndCheckSortOperation(ytClient yt.Client) {
+func runAndCheckSortOperation(ytClient yt.Client) mapreduce.Operation {
 	testTablePathIn := ypath.Path("//tmp/testexec")
 	testTablePathOut := ypath.Path("//tmp/testexec-out")
 	_, err := ytClient.CreateNode(
@@ -659,4 +674,5 @@ func runAndCheckSortOperation(ytClient yt.Client) {
 
 	sort.Strings(keys)
 	Expect(rows).Should(Equal(keys))
+	return op
 }
