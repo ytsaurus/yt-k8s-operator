@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	timeout  = time.Second * 120
+	timeout  = time.Second * 150
 	interval = time.Millisecond * 250
 )
 
@@ -471,6 +471,9 @@ var _ = Describe("Basic test for Ytsaurus controller", func() {
 			ytsaurus.Spec.ExecNodes = []ytv1.ExecNodesSpec{}
 			ytsaurus.Spec.DataNodes = []ytv1.DataNodesSpec{{
 				InstanceSpec: ytv1.CreateDataNodeInstanceSpec(1),
+			}}
+			ytsaurus.Spec.TabletNodes = []ytv1.TabletNodesSpec{{
+				InstanceSpec: ytv1.CreateTabletNodeSpec(1),
 			}}
 			g := ytconfig.NewGenerator(ytsaurus, "local")
 

@@ -27,7 +27,6 @@ var (
 )
 
 func CreateMinimalYtsaurusResource(namespace string) *Ytsaurus {
-
 	return &Ytsaurus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      YtsaurusName,
@@ -139,18 +138,7 @@ func CreateBaseYtsaurusResource(namespace string) *Ytsaurus {
 	}
 	ytsaurus.Spec.TabletNodes = []TabletNodesSpec{
 		{
-			InstanceSpec: InstanceSpec{
-				InstanceCount: 3,
-				Loggers: []TextLoggerSpec{
-					{
-						BaseLoggerSpec: BaseLoggerSpec{
-							MinLogLevel: LogLevelDebug,
-							Name:        "debug",
-						},
-						WriterType: LogWriterTypeFile,
-					},
-				},
-			},
+			InstanceSpec: CreateTabletNodeSpec(3),
 		},
 	}
 	ytsaurus.Spec.ExecNodes = []ExecNodesSpec{
@@ -253,6 +241,21 @@ func CreateDataNodeInstanceSpec(instanceCount int) InstanceSpec {
 			{
 				Name:      "node-data",
 				MountPath: "/yt/node-data",
+			},
+		},
+	}
+}
+
+func CreateTabletNodeSpec(instanceCount int) InstanceSpec {
+	return InstanceSpec{
+		InstanceCount: int32(instanceCount),
+		Loggers: []TextLoggerSpec{
+			{
+				BaseLoggerSpec: BaseLoggerSpec{
+					MinLogLevel: LogLevelDebug,
+					Name:        "debug",
+				},
+				WriterType: LogWriterTypeFile,
 			},
 		},
 	}
