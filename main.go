@@ -97,6 +97,7 @@ func main() {
 			managerOptions.NewCache = cache.MultiNamespacedCacheBuilder(strings.Split(watchNamespace, ","))
 		} else {
 			managerOptions.Namespace = watchNamespace
+			managerOptions.LeaderElectionNamespace = watchNamespace
 		}
 	}
 
