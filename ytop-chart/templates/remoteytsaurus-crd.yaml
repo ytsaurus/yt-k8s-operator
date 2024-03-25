@@ -616,6 +616,10 @@ spec:
               enableAntiAffinity:
                 description: Deprecated. Use Affinity.PodAntiAffinity instead.
                 type: boolean
+              extraLabels:
+                additionalProperties:
+                  type: string
+                type: object
               hostAddresses:
                 items:
                   type: string
