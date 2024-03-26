@@ -224,6 +224,8 @@ type HealthcheckProbeParams struct {
 }
 
 type InstanceSpec struct {
+	ExtraLabels map[string]string `json:"extraLabels,omitempty"`
+
 	Image        *string              `json:"image,omitempty"`
 	Volumes      []corev1.Volume      `json:"volumes,omitempty"`
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
@@ -384,6 +386,8 @@ type DiscoverySpec struct {
 }
 
 type UISpec struct {
+	ExtraLabels map[string]string `json:"extraLabels,omitempty"`
+
 	Image *string `json:"image,omitempty"`
 	//+kubebuilder:default:=NodePort
 	ServiceType  corev1.ServiceType `json:"serviceType,omitempty"`

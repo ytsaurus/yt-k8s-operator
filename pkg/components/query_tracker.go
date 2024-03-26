@@ -38,13 +38,14 @@ func NewQueryTracker(
 	tabletNodes []Component,
 ) *QueryTracker {
 	resource := ytsaurus.GetResource()
-	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
-		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: "yt-query-tracker",
-		ComponentName:  string(consts.QueryTrackerType),
-		Annotations:    resource.Spec.ExtraPodAnnotations,
-	}
+
+	l := labeller.NewLabellerForGlobalComponent(
+		&resource.ObjectMeta,
+		consts.QueryTrackerType,
+		consts.YTComponentLabelQueryTracker,
+		resource.Spec.QueryTrackers.ExtraLabels,
+		resource.Spec.ExtraPodAnnotations,
+	)
 
 	if resource.Spec.QueryTrackers.InstanceSpec.MonitoringPort == nil {
 		resource.Spec.QueryTrackers.InstanceSpec.MonitoringPort = ptr.Int32(consts.QueryTrackerMonitoringPort)

@@ -24,13 +24,14 @@ func NewRemoteExecNodes(
 	spec ytv1.ExecNodesSpec,
 	commonSpec ytv1.CommonSpec,
 ) *RemoteExecNode {
-	l := labeller.Labeller{
-		ObjectMeta:     &nodes.ObjectMeta,
-		APIProxy:       proxy,
-		ComponentLabel: cfgen.FormatComponentStringWithDefault(consts.YTComponentLabelExecNode, spec.Name),
-		ComponentName:  cfgen.FormatComponentStringWithDefault(string(consts.ExecNodeType), spec.Name),
-	}
-
+	l := labeller.NewLabellerForComponentInstance(
+		&nodes.ObjectMeta,
+		consts.ExecNodeType,
+		consts.YTComponentLabelExecNode,
+		spec.Name,
+		spec.ExtraLabels,
+		commonSpec.ExtraPodAnnotations,
+	)
 	if spec.InstanceSpec.MonitoringPort == nil {
 		spec.InstanceSpec.MonitoringPort = ptr.Int32(consts.ExecNodeMonitoringPort)
 	}
