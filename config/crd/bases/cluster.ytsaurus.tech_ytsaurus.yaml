@@ -33247,6 +33247,10 @@ spec:
                       - name
                       type: object
                     type: array
+                  extraLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
                   group:
                     type: string
                   httpNodePort:
