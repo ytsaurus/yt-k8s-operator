@@ -30,12 +30,15 @@ func NewTCPProxy(
 	masterReconciler Component,
 	spec ytv1.TCPProxiesSpec) *TcpProxy {
 	resource := ytsaurus.GetResource()
-	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
-		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: cfgen.FormatComponentStringWithDefault(consts.YTComponentLabelTCPProxy, spec.Role),
-		ComponentName:  cfgen.FormatComponentStringWithDefault(string(consts.TcpProxyType), spec.Role),
-	}
+
+	l := labeller.NewLabellerForComponentInstance(
+		&resource.ObjectMeta,
+		consts.TcpProxyType,
+		consts.YTComponentLabelTCPProxy,
+		spec.Role,
+		spec.ExtraLabels,
+		ytsaurus.GetCommonSpec().ExtraPodAnnotations,
+	)
 
 	if spec.InstanceSpec.MonitoringPort == nil {
 		spec.InstanceSpec.MonitoringPort = ptr.Int32(consts.TCPProxyMonitoringPort)

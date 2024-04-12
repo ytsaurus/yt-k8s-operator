@@ -31,12 +31,15 @@ func NewRPCProxy(
 	masterReconciler Component,
 	spec ytv1.RPCProxiesSpec) *RpcProxy {
 	resource := ytsaurus.GetResource()
-	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
-		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: cfgen.FormatComponentStringWithDefault(consts.YTComponentLabelRPCProxy, spec.Role),
-		ComponentName:  cfgen.FormatComponentStringWithDefault(string(consts.RpcProxyType), spec.Role),
-	}
+
+	l := labeller.NewLabellerForComponentInstance(
+		&resource.ObjectMeta,
+		consts.RpcProxyType,
+		consts.YTComponentLabelRPCProxy,
+		spec.Role,
+		spec.ExtraLabels,
+		ytsaurus.GetCommonSpec().ExtraPodAnnotations,
+	)
 
 	if spec.InstanceSpec.MonitoringPort == nil {
 		spec.InstanceSpec.MonitoringPort = ptr.Int32(consts.RPCProxyMonitoringPort)
