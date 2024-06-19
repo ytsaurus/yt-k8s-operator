@@ -1151,6 +1151,10 @@ spec:
                       type: string
                   type: object
                 type: array
+              useHttps:
+                default: false
+                description: Use HTTPS for HTTP API calls.
+                type: boolean
               useIpv4:
                 default: false
                 type: boolean

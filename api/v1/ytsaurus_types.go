@@ -527,6 +527,11 @@ type CommonSpec struct {
 	//+optional
 	NativeTransport *RPCTransportSpec `json:"nativeTransport,omitempty"`
 
+	// Use HTTPS for HTTP API calls.
+	//+kubebuilder:default:=false
+	//+optional
+	UseHTTPS bool `json:"useHttps"`
+
 	// Allow prioritizing performance over data safety. Useful for tests and experiments.
 	//+kubebuilder:default:=false
 	//+optional

@@ -118,6 +118,19 @@ func (g *Generator) GetHTTPProxiesAddress(role string) string {
 		g.GetHTTPProxiesServiceName(role),
 		g.ytsaurus.Namespace,
 		g.clusterDomain)
+
+}
+
+func (g *Generator) UseHTTPS() bool {
+	return g.commonSpec.UseHTTPS
+}
+
+func (g *Generator) GetHTTPProxyUrl(role string) string {
+	schema := ""
+	if g.commonSpec.UseHTTPS {
+		schema = "https://"
+	}
+	return schema + g.GetHTTPProxiesAddress(role)
 }
 
 func (g *Generator) GetSchedulerStatefulSetName() string {

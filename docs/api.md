@@ -236,6 +236,7 @@ _Appears in:_
 | `jobImage` _string_ | Default docker image for user jobs. |  |  |
 | `caBundle` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#localobjectreference-v1-core)_ | Reference to ConfigMap with trusted certificates: "ca.crt". |  |  |
 | `nativeTransport` _[RPCTransportSpec](#rpctransportspec)_ | Common config for native RPC bus transport. |  |  |
+| `useHttps` _boolean_ | Use HTTPS for HTTP API calls. | false |  |
 | `ephemeralCluster` _boolean_ | Allow prioritizing performance over data safety. Useful for tests and experiments. | false |  |
 | `useIpv6` _boolean_ |  | false |  |
 | `useIpv4` _boolean_ |  | false |  |
@@ -1084,6 +1085,7 @@ _Appears in:_
 | `jobImage` _string_ | Default docker image for user jobs. |  |  |
 | `caBundle` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#localobjectreference-v1-core)_ | Reference to ConfigMap with trusted certificates: "ca.crt". |  |  |
 | `nativeTransport` _[RPCTransportSpec](#rpctransportspec)_ | Common config for native RPC bus transport. |  |  |
+| `useHttps` _boolean_ | Use HTTPS for HTTP API calls. | false |  |
 | `ephemeralCluster` _boolean_ | Allow prioritizing performance over data safety. Useful for tests and experiments. | false |  |
 | `useIpv6` _boolean_ |  | false |  |
 | `useIpv4` _boolean_ |  | false |  |
@@ -1597,6 +1599,7 @@ _Appears in:_
 | `jobImage` _string_ | Default docker image for user jobs. |  |  |
 | `caBundle` _[LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.28/#localobjectreference-v1-core)_ | Reference to ConfigMap with trusted certificates: "ca.crt". |  |  |
 | `nativeTransport` _[RPCTransportSpec](#rpctransportspec)_ | Common config for native RPC bus transport. |  |  |
+| `useHttps` _boolean_ | Use HTTPS for HTTP API calls. | false |  |
 | `ephemeralCluster` _boolean_ | Allow prioritizing performance over data safety. Useful for tests and experiments. | false |  |
 | `useIpv6` _boolean_ |  | false |  |
 | `useIpv4` _boolean_ |  | false |  |

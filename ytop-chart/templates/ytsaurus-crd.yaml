@@ -33372,6 +33372,10 @@ spec:
                 - ExecNodesOnly
                 - Everything
                 type: string
+              useHttps:
+                default: false
+                description: Use HTTPS for HTTP API calls.
+                type: boolean
               useIpv4:
                 default: false
                 type: boolean
