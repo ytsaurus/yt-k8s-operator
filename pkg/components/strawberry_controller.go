@@ -52,7 +52,6 @@ func NewStrawberryController(
 
 	image := resource.Spec.CoreImage
 	name := "chyt"
-	componentName := "ChytController"
 	if resource.Spec.DeprecatedChytController != nil {
 		if resource.Spec.DeprecatedChytController.Image != nil {
 			image = *resource.Spec.DeprecatedChytController.Image
@@ -60,19 +59,17 @@ func NewStrawberryController(
 	}
 	if resource.Spec.StrawberryController != nil {
 		name = "strawberry"
-		componentName = string(consts.StrawberryControllerType)
 		if resource.Spec.StrawberryController.Image != nil {
 			image = *resource.Spec.StrawberryController.Image
 		}
 	}
 
-	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
-		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: fmt.Sprintf("yt-%s-controller", name),
-		ComponentName:  componentName,
-		Annotations:    resource.Spec.ExtraPodAnnotations,
-	}
+	l := labeller.NewSingletonComponentLabeller(
+		&resource.ObjectMeta,
+		consts.StrawberryControllerType,
+		fmt.Sprintf("yt-%s-controller", name),
+		resource.Spec.ExtraPodAnnotations,
+	)
 
 	microservice := newMicroservice(
 		&l,

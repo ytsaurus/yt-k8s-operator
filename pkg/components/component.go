@@ -48,6 +48,7 @@ type Component interface {
 	Status(ctx context.Context) (ComponentStatus, error)
 	GetName() string
 	GetType() consts.ComponentType
+	GetMetaLabelMap(isInitJob bool) map[string]string
 	SetReadyCondition(status ComponentStatus)
 
 	// TODO(nadya73): refactor it
@@ -66,7 +67,11 @@ type baseComponent struct {
 // For example for master component name is "Master",
 // For data node name looks like "DataNode<NameFromSpec>".
 func (c *baseComponent) GetName() string {
-	return c.labeller.ComponentName
+	return c.labeller.ComponentFullName
+}
+
+func (c *baseComponent) GetMetaLabelMap(isInitJob bool) map[string]string {
+	return c.labeller.GetMetaLabelMap(isInitJob)
 }
 
 // localComponent is a base structs for components which have access to ytsaurus resource,
@@ -99,7 +104,7 @@ func (c *localComponent) SetReadyCondition(status ComponentStatus) {
 		ready = metav1.ConditionTrue
 	}
 	c.ytsaurus.SetStatusCondition(metav1.Condition{
-		Type:    fmt.Sprintf("%sReady", c.labeller.ComponentName),
+		Type:    fmt.Sprintf("%sReady", c.labeller.ComponentFullName),
 		Status:  ready,
 		Reason:  string(status.SyncStatus),
 		Message: status.Message,

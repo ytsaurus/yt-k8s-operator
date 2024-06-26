@@ -28,13 +28,13 @@ type YqlAgent struct {
 
 func NewYQLAgent(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master Component) *YqlAgent {
 	resource := ytsaurus.GetResource()
-	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
-		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: consts.YTComponentLabelYqlAgent,
-		ComponentName:  string(consts.YqlAgentType),
-		Annotations:    resource.Spec.ExtraPodAnnotations,
-	}
+
+	l := labeller.NewSingletonComponentLabeller(
+		&resource.ObjectMeta,
+		consts.YqlAgentType,
+		consts.YTComponentLabelYqlAgent,
+		resource.Spec.ExtraPodAnnotations,
+	)
 
 	if resource.Spec.YQLAgents.InstanceSpec.MonitoringPort == nil {
 		resource.Spec.YQLAgents.InstanceSpec.MonitoringPort = ptr.Int32(consts.YQLAgentMonitoringPort)
@@ -85,7 +85,7 @@ func (yqla *YqlAgent) IsUpdatable() bool {
 func (yqla *YqlAgent) GetType() consts.ComponentType { return consts.YqlAgentType }
 
 func (yqla *YqlAgent) GetName() string {
-	return yqla.labeller.ComponentName
+	return yqla.labeller.ComponentFullName
 }
 
 func (yqla *YqlAgent) Fetch(ctx context.Context) error {

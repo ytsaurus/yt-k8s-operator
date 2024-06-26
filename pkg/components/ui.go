@@ -32,13 +32,13 @@ const UICustomConfigFileName = "common.js"
 
 func NewUI(cfgen *ytconfig.Generator, ytsaurus *apiproxy.Ytsaurus, master Component) *UI {
 	resource := ytsaurus.GetResource()
-	l := labeller.Labeller{
-		ObjectMeta:     &resource.ObjectMeta,
-		APIProxy:       ytsaurus.APIProxy(),
-		ComponentLabel: consts.YTComponentLabelUI,
-		ComponentName:  string(consts.UIType),
-		Annotations:    resource.Spec.ExtraPodAnnotations,
-	}
+
+	l := labeller.NewSingletonComponentLabeller(
+		&resource.ObjectMeta,
+		consts.UIType,
+		consts.YTComponentLabelUI,
+		resource.Spec.ExtraPodAnnotations,
+	)
 
 	image := resource.Spec.UIImage
 	if resource.Spec.UI.Image != nil {
