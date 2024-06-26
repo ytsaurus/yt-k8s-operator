@@ -14,11 +14,13 @@ import (
 type SyncStatus string
 
 const (
-	SyncStatusBlocked         SyncStatus = "Blocked"
 	SyncStatusNeedLocalUpdate SyncStatus = "NeedLocalUpdate"
 	SyncStatusPending         SyncStatus = "Pending"
-	SyncStatusReady           SyncStatus = "Ready"
 	SyncStatusUpdating        SyncStatus = "Updating"
+
+	SyncStatusNeedSync SyncStatus = "NeedSync"
+	SyncStatusReady    SyncStatus = "Ready"
+	SyncStatusBlocked  SyncStatus = "Blocked"
 )
 
 func IsRunningStatus(status SyncStatus) bool {
@@ -28,18 +30,31 @@ func IsRunningStatus(status SyncStatus) bool {
 type ComponentStatus struct {
 	SyncStatus SyncStatus
 	Message    string
+	Stage      string
 }
 
 func NewComponentStatus(status SyncStatus, message string) ComponentStatus {
-	return ComponentStatus{status, message}
+	return ComponentStatus{SyncStatus: status, Message: message}
 }
 
 func WaitingStatus(status SyncStatus, event string) ComponentStatus {
-	return ComponentStatus{status, fmt.Sprintf("Wait for %s", event)}
+	return ComponentStatus{SyncStatus: status, Message: fmt.Sprintf("Wait for %s", event)}
 }
 
 func SimpleStatus(status SyncStatus) ComponentStatus {
-	return ComponentStatus{status, string(status)}
+	return ComponentStatus{SyncStatus: status, Message: string(status)}
+}
+
+func NeedSyncStatus(message string) ComponentStatus {
+	return ComponentStatus{SyncStatus: SyncStatusNeedSync, Message: message}
+}
+
+func UpdatingStatus(message string) ComponentStatus {
+	return ComponentStatus{SyncStatus: SyncStatusUpdating, Message: message}
+}
+
+func ReadyStatus() ComponentStatus {
+	return ComponentStatus{SyncStatus: SyncStatusReady}
 }
 
 type Component interface {
@@ -74,6 +89,11 @@ func (c *baseComponent) GetName() string {
 type localComponent struct {
 	baseComponent
 	ytsaurus *apiproxy.Ytsaurus
+
+	// currently we have it in the component, but in the future we may
+	// want to receive it from the outside of the component.
+	condManager  *ConditionManager
+	stateManager *StateManager
 }
 
 // localServerComponent is a base structs for components which have access to ytsaurus resource,
@@ -90,6 +110,8 @@ func newLocalComponent(
 	return localComponent{
 		baseComponent: baseComponent{labeller: labeller},
 		ytsaurus:      ytsaurus,
+		condManager:   NewConditionManagerFromYtsaurus(ytsaurus),
+		stateManager:  NewStateManagerFromYtsaurus(ytsaurus),
 	}
 }
 
@@ -112,13 +134,8 @@ func newLocalServerComponent(
 	server server,
 ) localServerComponent {
 	return localServerComponent{
-		localComponent: localComponent{
-			baseComponent: baseComponent{
-				labeller: labeller,
-			},
-			ytsaurus: ytsaurus,
-		},
-		server: server,
+		localComponent: newLocalComponent(labeller, ytsaurus),
+		server:         server,
 	}
 }
 

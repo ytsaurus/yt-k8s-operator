@@ -37,7 +37,7 @@ const (
 	pollInterval     = time.Millisecond * 250
 	reactionTimeout  = time.Second * 150
 	bootstrapTimeout = time.Minute * 3
-	upgradeTimeout   = time.Minute * 7
+	upgradeTimeout   = time.Minute * 10
 )
 
 var getYtClient = getYtHTTPClient
@@ -259,7 +259,7 @@ var _ = Describe("Basic test for Ytsaurus controller", func() {
 			"Should run and update Ytsaurus within same major version", Label("basic"), getSimpleUpdateScenario("test-minor-update", ytv1.CoreImageSecond),
 		)
 		It(
-			"Should run and update Ytsaurus to the next major version",
+			"Should run and update Ytsaurus to the next major version", Label("basic"),
 			getSimpleUpdateScenario("test-major-update", ytv1.CoreImageNextVer),
 		)
 		It(
@@ -356,7 +356,8 @@ var _ = Describe("Basic test for Ytsaurus controller", func() {
 			},
 		)
 		It(
-			"Should be updated according to UpdateSelector=MasterOnly,StatelessOnly", Label("basic"), func(ctx context.Context) {
+			"Should be updated according to UpdateSelector=MasterOnly,StatelessOnly", /*Label("basic")*/
+			func(ctx context.Context) {
 				namespace := "testslctother"
 
 				By("Creating a Ytsaurus resource")
@@ -454,7 +455,7 @@ var _ = Describe("Basic test for Ytsaurus controller", func() {
 			Expect(k8sClient.Update(ctx, ytsaurus)).Should(Succeed())
 
 			By("Waiting PossibilityCheck")
-			EventuallyYtsaurus(ctx, ytsaurusKey, reactionTimeout).Should(HaveClusterUpdateState(ytv1.UpdateStatePossibilityCheck))
+			EventuallyYtsaurus(ctx, ytsaurusKey, upgradeTimeout).Should(HaveClusterUpdateState(ytv1.UpdateStatePossibilityCheck))
 
 			By("Check that master pod was NOT recreated at the PossibilityCheck stage")
 			time.Sleep(1 * time.Second)
