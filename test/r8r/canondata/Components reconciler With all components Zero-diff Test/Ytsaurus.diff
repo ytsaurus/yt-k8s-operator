@@ -13,7 +13,7 @@
  spec:
    adminCredentials:
      name: test-ytsaurus-admin
-@@ -811,7 +811,7 @@
+@@ -813,7 +813,7 @@
    conditions:
    - lastTransitionTime: null
      message: 0.0.0-devel
@@ -22,7 +22,7 @@
      reason: Observed
      status: "True"
      type: OperatorVersion
-@@ -819,19 +819,19 @@
+@@ -821,19 +821,19 @@
      message: Ready 5 of 5; daemon set ih-ca is ready at 1 nodes; daemon set ih-ms
        is ready at 1 nodes; daemon set ih-strawberry is ready at 1 nodes; daemon set
        ih-ui is ready at 1 nodes; daemon set ih-yqla is ready at 1 nodes
@@ -45,7 +45,7 @@
      reason: Ready
      status: "True"
      type: Master-2Ready
-@@ -849,55 +849,55 @@
+@@ -851,55 +851,55 @@
      type: defaultMasterInitJobCompleted
    - lastTransitionTime: null
      message: Ready
@@ -110,7 +110,7 @@
      reason: Ready
      status: "True"
      type: SchedulerReady
-@@ -915,7 +915,7 @@
+@@ -917,7 +917,7 @@
      type: yql-agent-environmentYqlAgentInitJobCompleted
    - lastTransitionTime: null
      message: 'Pods are ready: 0 of 0, running 0, need 0'
@@ -119,7 +119,7 @@
      reason: Ready
      status: "True"
      type: UIReady
-@@ -927,7 +927,7 @@
+@@ -929,7 +929,7 @@
      type: userYtsaurusClientInitJobCompleted
    - lastTransitionTime: null
      message: Ready
@@ -128,7 +128,7 @@
      reason: Ready
      status: "True"
      type: YqlAgentReady
-@@ -939,22 +939,10 @@
+@@ -941,22 +941,10 @@
      type: userStrawberryControllerInitJobCompleted
    - lastTransitionTime: null
      message: Cypress operations skipped
@@ -152,7 +152,7 @@
    - lastTransitionTime: null
      message: Job yt-strawberry-controller-init-job-cluster completed in -1ns
      observedGeneration: 1
-@@ -963,17 +951,29 @@
+@@ -965,17 +953,29 @@
      type: clusterStrawberryControllerInitJobCompleted
    - lastTransitionTime: null
      message: Ready
