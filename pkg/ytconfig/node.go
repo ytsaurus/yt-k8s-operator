@@ -279,6 +279,7 @@ type ExecNode struct {
 	GpuManager    GpuManager    `yson:"gpu_manager"`
 	JobController JobController `yson:"job_controller"`
 	JobProxy      JobProxy      `yson:"job_proxy"`
+	RootFSBinds   []BindMount   `yson:"root_fs_binds,omitempty"`
 
 	JobProxyAuthenticationManagerLegacy  *Auth    `yson:"job_proxy_authentication_manager,omitempty"`
 	JobProxyLoggingLegacy                *Logging `yson:"job_proxy_logging,omitempty"`
@@ -566,6 +567,14 @@ func fillJobEnvironmentCRI(
 		jobEnv.JobProxyBindMounts = append(jobEnv.JobProxyBindMounts, BindMount{
 			InternalPath: consts.CARootBundleMountPoint,
 			ExternalPath: consts.CARootBundleMountPoint,
+			ReadOnly:     true,
+		})
+	}
+
+	if spec.JobHTTPSCertificate != nil {
+		execNode.RootFSBinds = append(execNode.RootFSBinds, BindMount{
+			InternalPath: consts.JobHTTPSSecretMountPoint,
+			ExternalPath: consts.JobHTTPSSecretMountPoint,
 			ReadOnly:     true,
 		})
 	}
